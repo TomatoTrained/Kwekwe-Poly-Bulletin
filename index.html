@@ -617,11 +617,12 @@
         });
 
         // Fallback: if Firebase doesn't load after 5 seconds, show error
-        setTimeout(function() {
-            if (document.getElementById('firebase-loading').style.display !== 'none') {
-                checkFirebaseLoaded();
-            }
-        }, 5000);
-    </script>
+      setTimeout(function() {
+    const loadingElement = document.getElementById('firebase-loading');
+    if (loadingElement && loadingElement.style.display !== 'none') {
+        checkFirebaseLoaded();
+    }
+}, 5000);
 </body>
 </html>
+
