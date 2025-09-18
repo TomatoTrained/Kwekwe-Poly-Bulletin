@@ -1,619 +1,627 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kwekwe Poly Bulletin</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK with proper error handling -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
-      :root {
-        --primary: #1a4b8c;
-        --secondary: #ff9900;
-        --light: #f5f7fa;
-        --dark: #1e293b;
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      body {
-        background-color: #f0f4f8;
-        color: #333;
-        line-height: 1.6;
-        padding: env(safe-area-inset-top) env(safe-area-inset-right)
-          env(safe-area-inset-bottom) env(safe-area-inset-left);
-        touch-action: manipulation;
-      }
-
-      .container {
-        width: 100%;
-        max-width: 100%;
-        margin: 0 auto;
-        padding: 0 15px;
-      }
-
-      /* Header Styles */
-      header {
-        background-color: var(--primary);
-        color: white;
-        padding: 12px 0;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-
-      .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .logo {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .logo h1 {
-        font-size: 1.3rem;
-        font-weight: 700;
-      }
-
-      /* Android Navigation */
-      .android-nav {
-        background-color: white;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: space-around;
-        padding: 10px;
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-      }
-
-      .nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-decoration: none;
-        color: #666;
-        font-size: 0.75rem;
-        padding: 5px;
-      }
-
-      .nav-item.active {
-        color: var(--primary);
-      }
-
-      .nav-icon {
-        font-size: 1.1rem;
-        margin-bottom: 4px;
-      }
-
-      /* Hero Section */
-      .hero {
-        background: linear-gradient(
-            rgba(26, 75, 140, 0.8),
-            rgba(26, 75, 140, 0.9)
-          ),
-          url("https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80");
-        background-size: cover;
-        background-position: center;
-        color: white;
-        padding: 30px 0;
-        text-align: center;
-        margin-bottom: 20px;
-      }
-
-      .hero h2 {
-        font-size: 1.6rem;
-        margin-bottom: 12px;
-      }
-
-      .hero p {
-        font-size: 0.95rem;
-        max-width: 700px;
-        margin: 0 auto;
-      }
-
-      /* News Section */
-      .news-section {
-        padding: 15px 0 70px;
-      }
-
-      .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-      }
-
-      .section-title {
-        font-size: 1.3rem;
-        color: var(--primary);
-      }
-
-      .refresh-btn {
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        padding: 8px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 0.9rem;
-      }
-
-      .news-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 15px;
-      }
-
-      .news-card {
-        background-color: white;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      }
-
-      .news-image {
-        height: 160px;
-        overflow: hidden;
-      }
-
-      .news-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .news-content {
-        padding: 12px;
-      }
-
-      .news-category {
-        display: inline-block;
-        padding: 3px 8px;
-        background-color: var(--secondary);
-        color: white;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        margin-bottom: 8px;
-      }
-
-      .news-title {
-        font-size: 1rem;
-        margin-bottom: 8px;
-        color: var(--dark);
-      }
-
-      .news-excerpt {
-        color: #666;
-        margin-bottom: 12px;
-        font-size: 0.85rem;
-        line-height: 1.5;
-      }
-
-      .news-meta {
-        display: flex;
-        justify-content: space-between;
-        color: #888;
-        font-size: 0.8rem;
-      }
-
-      /* Loading and Status */
-      .loading,
-      .error,
-      .empty {
-        text-align: center;
-        padding: 25px;
-      }
-
-      .loading {
-        color: var(--primary);
-      }
-
-      .error {
-        color: #dc3545;
-      }
-
-      .empty {
-        color: #666;
-      }
-
-      .status-indicator {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        margin-right: 6px;
-      }
-
-      .status-connected {
-        background-color: #28a745;
-      }
-
-      .status-disconnected {
-        background-color: #dc3545;
-      }
-
-      /* App Container */
-      .app-container {
-        max-width: 100%;
-        margin: 0 auto;
-        background: white;
-        min-height: 100vh;
-      }
-
-      /* AppGeyser specific optimizations */
-      .disable-scrollbars::-webkit-scrollbar {
-        display: none;
-      }
-
-      .appgeyser-ad-container {
-        margin: 15px 0;
-        text-align: center;
-      }
-
-      @media (max-width: 768px) {
+        :root {
+            --primary: #1a4b8c;
+            --secondary: #ff9900;
+            --light: #f5f7fa;
+            --dark: #1e293b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+            touch-action: manipulation;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
         .header-content {
-          flex-direction: column;
-          gap: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-
-        .hero h2 {
-          font-size: 1.4rem;
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
+        
         .logo h1 {
-          font-size: 1.2rem;
+            font-size: 1.3rem;
+            font-weight: 700;
         }
-
+        
+        /* Android Navigation */
+        .android-nav {
+            background-color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #666;
+            font-size: 0.75rem;
+            padding: 5px;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(26, 75, 140, 0.8), rgba(26, 75, 140, 0.9)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .hero h2 {
+            font-size: 1.6rem;
+            margin-bottom: 12px;
+        }
+        
+        .hero p {
+            font-size: 0.95rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* News Section */
+        .news-section {
+            padding: 15px 0 70px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+        
+        .refresh-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .news-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .news-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
         .news-image {
-          height: 140px;
+            height: 160px;
+            overflow: hidden;
         }
-      }
-
-      /* Pull to refresh indicator */
-      .pull-refresh {
-        text-align: center;
-        padding: 10px;
-        color: #666;
-        display: none;
-      }
+        
+        .news-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .news-content {
+            padding: 12px;
+        }
+        
+        .news-category {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        
+        .news-title {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+        
+        .news-excerpt {
+            color: #666;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.8rem;
+        }
+        
+        /* Loading and Status */
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 25px;
+        }
+        
+        .loading {
+            color: var(--primary);
+        }
+        
+        .error {
+            color: #dc3545;
+        }
+        
+        .empty {
+            color: #666;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .status-connected {
+            background-color: #28a745;
+        }
+        
+        .status-disconnected {
+            background-color: #dc3545;
+        }
+        
+        /* App Container */
+        .app-container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+        }
+        
+        /* Firebase loading indicator */
+        .firebase-loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .hero h2 {
+                font-size: 1.4rem;
+            }
+            
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+            
+            .news-image {
+                height: 140px;
+            }
+        }
+        
+        /* Pull to refresh indicator */
+        .pull-refresh {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            display: none;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <div class="app-container">
-      <!-- Header -->
-      <header>
-        <div class="container">
-          <div class="header-content">
-            <div class="logo">
-              <i class="fas fa-school"></i>
-              <h1>Kwekwe Poly Bulletin</h1>
+        <!-- Header -->
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-school"></i>
+                        <h1>Kwekwe Poly Bulletin</h1>
+                    </div>
+                    <div class="last-updated" id="last-updated">
+                        <span class="status-indicator" id="status-indicator"></span>
+                        <span id="last-updated-text">Loading Firebase...</span>
+                    </div>
+                </div>
             </div>
-            <div class="last-updated" id="last-updated">
-              <span
-                class="status-indicator status-connected"
-                id="status-indicator"
-              ></span>
-              <span id="last-updated-text">Live Updates</span>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h2>Latest Campus News</h2>
+                <p>Stay updated with Kwekwe Polytechnic announcements</p>
             </div>
-          </div>
-        </div>
-      </header>
+        </section>
 
-      <!-- Hero Section -->
-      <section class="hero">
-        <div class="container">
-          <h2>Latest Campus News</h2>
-          <p>Stay updated with Kwekwe Polytechnic announcements</p>
-        </div>
-      </section>
+        <!-- News Section -->
+        <section class="news-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">News Feed</h2>
+                    <button class="refresh-btn" id="refresh-news">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
 
-      <!-- News Section -->
-      <section class="news-section">
-        <div class="container">
-          <div class="section-header">
-            <h2 class="section-title">News Feed</h2>
-            <button class="refresh-btn" id="refresh-news">
-              <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-          </div>
+                <div class="pull-refresh" id="pull-refresh">
+                    <i class="fas fa-sync-alt fa-spin"></i> Refreshing...
+                </div>
 
-          <div class="pull-refresh" id="pull-refresh">
-            <i class="fas fa-sync-alt fa-spin"></i> Refreshing...
-          </div>
-
-          <div class="news-grid" id="news-container">
-            <div class="loading">
-              <i class="fas fa-spinner fa-spin"></i> Loading news...
+                <div class="news-grid" id="news-container">
+                    <div class="firebase-loading" id="firebase-loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading Firebase SDK...
+                    </div>
+                </div>
             </div>
-          </div>
+        </section>
 
-          <!-- AppGeyser Ad Container (optional) -->
-          <div class="appgeyser-ad-container">
-            <!-- AppGeyser will automatically insert ads here -->
-          </div>
-        </div>
-      </section>
-
-      <!-- Android Navigation -->
-      <nav class="android-nav">
-        <a href="#" class="nav-item active">
-          <i class="fas fa-home nav-icon"></i>
-          <span>Home</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-newspaper nav-icon"></i>
-          <span>News</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-calendar nav-icon"></i>
-          <span>Events</span>
-        </a>
-        <a href="#" class="nav-item">
-          <i class="fas fa-info-circle nav-icon"></i>
-          <span>About</span>
-        </a>
-      </nav>
+        <!-- Android Navigation -->
+        <nav class="android-nav">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-home nav-icon"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-newspaper nav-icon"></i>
+                <span>News</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-calendar nav-icon"></i>
+                <span>Events</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-info-circle nav-icon"></i>
+                <span>About</span>
+            </a>
+        </nav>
     </div>
 
     <script>
-      // Your Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyAL7NNio6HiW6sEG6D7ICwUGVgtui8VVns",
-        authDomain: "kwekwe-poly-bulletin.firebaseapp.com",
-        projectId: "kwekwe-poly-bulletin",
-        storageBucket: "kwekwe-poly-bulletin.firebasestorage.app",
-        messagingSenderId: "988682570917",
-        appId: "1:988682570917:web:8e66c6fbe54384a56a914c",
-        measurementId: "G-JE1FN4M7Y3",
-      };
-
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-
-      // DOM elements
-      const newsContainer = document.getElementById("news-container");
-      const refreshNewsBtn = document.getElementById("refresh-news");
-      const lastUpdatedText = document.getElementById("last-updated-text");
-      const statusIndicator = document.getElementById("status-indicator");
-      const pullRefreshIndicator = document.getElementById("pull-refresh");
-
-      // Sample news data for demonstration
-      const sampleNews = [
-        {
-          title: "Graduation Ceremony This December",
-          content:
-            "The annual graduation ceremony will take place on December 15th at the main campus auditorium. All students who have completed their programs are invited to attend.",
-          category: "Academic",
-          image:
-            "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-          timestamp: new Date(),
-          views: 243,
-        },
-        {
-          title: "Football Team Wins Championship",
-          content:
-            "Our football team has brought home the regional championship trophy after an exciting final match against Harare Poly.",
-          category: "Sports",
-          image:
-            "https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-          timestamp: new Date(Date.now() - 86400000),
-          views: 187,
-        },
-        {
-          title: "New Library Resources Available",
-          content:
-            "The campus library has recently added over 500 new books and online resources available to all students.",
-          category: "Campus",
-          image:
-            "https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-          timestamp: new Date(Date.now() - 172800000),
-          views: 156,
-        },
-      ];
-
-      // Format date to readable time ago
-      function formatTimeAgo(timestamp) {
-        if (!timestamp) return "Recently";
-
-        const now = new Date();
-        const time = timestamp.toDate
-          ? timestamp.toDate()
-          : new Date(timestamp);
-        const diffInSeconds = Math.floor((now - time) / 1000);
-
-        if (diffInSeconds < 60) return "just now";
-        if (diffInSeconds < 3600)
-          return `${Math.floor(diffInSeconds / 60)}m ago`;
-        if (diffInSeconds < 86400)
-          return `${Math.floor(diffInSeconds / 3600)}h ago`;
-        return `${Math.floor(diffInSeconds / 86400)}d ago`;
-      }
-
-      // Update the last updated time
-      function updateLastUpdated() {
-        const now = new Date();
-        lastUpdatedText.textContent = `Updated: ${now.toLocaleTimeString()}`;
-      }
-
-      // Display a news item in the grid
-      function displayNewsItem(news, id) {
-        const newsCard = document.createElement("div");
-        newsCard.className = "news-card";
-        newsCard.setAttribute("data-id", id);
-
-        const timeAgo = formatTimeAgo(news.timestamp);
-        const excerpt =
-          news.content.length > 100
-            ? news.content.substring(0, 100) + "..."
-            : news.content;
-
-        newsCard.innerHTML = `
-                <div class="news-image">
-                    <img src="${
-                      news.image ||
-                      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                    }" alt="${news.title}">
-                </div>
-                <div class="news-content">
-                    <span class="news-category">${
-                      news.category || "General"
-                    }</span>
-                    <h3 class="news-title">${news.title}</h3>
-                    <p class="news-excerpt">${excerpt}</p>
-                    <div class="news-meta">
-                        <span><i class="far fa-clock"></i> ${timeAgo}</span>
-                        <span><i class="far fa-eye"></i> ${
-                          news.views || 0
-                        }</span>
-                    </div>
-                </div>
-            `;
-
-        newsContainer.appendChild(newsCard);
-      }
-
-      // Load news from Firebase
-      function loadNews() {
-        newsContainer.innerHTML =
-          '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading news...</div>';
-
-        db.collection("news")
-          .orderBy("timestamp", "desc")
-          .get()
-          .then((querySnapshot) => {
-            newsContainer.innerHTML = "";
-
-            if (querySnapshot.empty) {
-              newsContainer.innerHTML = `
-                        <div class="empty">
-                            <i class="fas fa-newspaper"></i>
-                            <p>No news articles found.</p>
-                            <p>News updates here.</p>
-                        </div>
-                    `;
-
-              // Show sample data for demo purposes
-              sampleNews.forEach((news) => displayNewsItem(news));
-            } else {
-              querySnapshot.forEach((doc) => {
-                displayNewsItem(doc.data(), doc.id);
-              });
-            }
-
-            updateLastUpdated();
-            statusIndicator.className = "status-indicator status-connected";
-            pullRefreshIndicator.style.display = "none";
-          })
-          .catch((error) => {
-            console.error("Error getting news: ", error);
-            newsContainer.innerHTML = `
+        // Check if Firebase is loaded properly
+        function checkFirebaseLoaded() {
+            if (typeof firebase === 'undefined' || typeof firebase.firestore === 'undefined') {
+                document.getElementById('news-container').innerHTML = `
                     <div class="error">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <p>Error loading news .</p>
-                        <p>Showing sample data instead.</p>
+                        <h3>Firebase SDK Failed to Load</h3>
+                        <p>Please check your internet connection and try again.</p>
+                        <button onclick="window.location.reload()" class="refresh-btn">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
                     </div>
                 `;
-
-            // Show sample data as fallback
-            sampleNews.forEach((news) => displayNewsItem(news));
-
-            statusIndicator.className = "status-indicator status-disconnected";
-            lastUpdatedText.textContent = "Offline Mode";
-            pullRefreshIndicator.style.display = "none";
-          });
-      }
-
-      // Set up real-time listener
-      function setupRealTimeListener() {
-        db.collection("news")
-          .orderBy("timestamp", "desc")
-          .onSnapshot(
-            (querySnapshot) => {
-              console.log("Received real-time update ");
-              loadNews(); // Reload news when changes detected
-            },
-            (error) => {
-              console.error("Real-time listener error: ", error);
-              statusIndicator.className =
-                "status-indicator status-disconnected";
-              lastUpdatedText.textContent = "Connection error";
+                document.getElementById('status-indicator').className = 'status-indicator status-disconnected';
+                document.getElementById('last-updated-text').textContent = 'Firebase Error';
+                return false;
             }
-          );
-      }
-
-      // Event Listeners
-      refreshNewsBtn.addEventListener("click", function () {
-        pullRefreshIndicator.style.display = "block";
-        loadNews();
-      });
-
-      // Initialize the app
-      document.addEventListener("DOMContentLoaded", function () {
-        console.log("Initializing Kwekwe Poly Bulletin ");
-        loadNews();
-        setupRealTimeListener();
-
-        // Set up periodic refresh every 5 minutes
-        setInterval(loadNews, 300000);
-
-        // Add pull-to-refresh functionality
-        let touchStartY = 0;
-        let isRefreshing = false;
-
-        document.addEventListener("touchstart", (e) => {
-          if (isRefreshing) return;
-          touchStartY = e.touches[0].clientY;
-        });
-
-        document.addEventListener("touchmove", (e) => {
-          if (isRefreshing) return;
-
-          const touchY = e.touches[0].clientY;
-          const pullDistance = touchY - touchStartY;
-
-          if (pullDistance > 80 && window.scrollY === 0) {
-            isRefreshing = true;
-            pullRefreshIndicator.style.display = "block";
-            loadNews();
-
-            // Reset after 3 seconds if something goes wrong
-            setTimeout(() => {
-              isRefreshing = false;
-              pullRefreshIndicator.style.display = "none";
-            }, 3000);
-          }
-        });
-
-        // Handle AppGeyser specific events
-        if (window.AppGeyser) {
-          console.log("Running in AppGeyser environment");
-          // AppGeyser specific initialization if needed
+            return true;
         }
-      });
-    </script>
-  </body>
-</html>
 
+        // Initialize the app only after Firebase is confirmed to be loaded
+        function initApp() {
+            if (!checkFirebaseLoaded()) {
+                return;
+            }
+
+            // Your Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyAL7NNio6HiW6sEG6D7ICwUGVgtui8VVns",
+                authDomain: "kwekwe-poly-bulletin.firebaseapp.com",
+                projectId: "kwekwe-poly-bulletin",
+                storageBucket: "kwekwe-poly-bulletin.firebasestorage.app",
+                messagingSenderId: "988682570917",
+                appId: "1:988682570917:web:8e66c6fbe54384a56a914c",
+                measurementId: "G-JE1FN4M7Y3"
+            };
+
+            // Initialize Firebase
+            try {
+                firebase.initializeApp(firebaseConfig);
+                const db = firebase.firestore();
+                
+                // Hide loading indicator
+                document.getElementById('firebase-loading').style.display = 'none';
+                
+                // Now initialize the rest of the app
+                initializeNewsApp(db);
+            } catch (error) {
+                console.error("Firebase initialization error: ", error);
+                document.getElementById('news-container').innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Firebase Initialization Error</h3>
+                        <p>${error.message}</p>
+                        <button onclick="window.location.reload()" class="refresh-btn">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+                `;
+                document.getElementById('status-indicator').className = 'status-indicator status-disconnected';
+                document.getElementById('last-updated-text').textContent = 'Initialization Error';
+            }
+        }
+
+        // Initialize the news app after Firebase is ready
+        function initializeNewsApp(db) {
+            // DOM elements
+            const newsContainer = document.getElementById('news-container');
+            const refreshNewsBtn = document.getElementById('refresh-news');
+            const lastUpdatedText = document.getElementById('last-updated-text');
+            const statusIndicator = document.getElementById('status-indicator');
+            const pullRefreshIndicator = document.getElementById('pull-refresh');
+
+            // Sample news data for demonstration
+            const sampleNews = [
+                {
+                    title: "Graduation Ceremony This December",
+                    content: "The annual graduation ceremony will take place on December 15th at the main campus auditorium. All students who have completed their programs are invited to attend.",
+                    category: "Academic",
+                    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                    timestamp: new Date(),
+                    views: 243
+                },
+                {
+                    title: "Football Team Wins Championship",
+                    content: "Our football team has brought home the regional championship trophy after an exciting final match against Harare Poly.",
+                    category: "Sports",
+                    image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                    timestamp: new Date(Date.now() - 86400000),
+                    views: 187
+                },
+                {
+                    title: "New Library Resources Available",
+                    content: "The campus library has recently added over 500 new books and online resources available to all students.",
+                    category: "Campus",
+                    image: "https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+                    timestamp: new Date(Date.now() - 172800000),
+                    views: 156
+                }
+            ];
+
+            // Format date to readable time ago
+            function formatTimeAgo(timestamp) {
+                if (!timestamp) return 'Recently';
+                
+                const now = new Date();
+                const time = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                const diffInSeconds = Math.floor((now - time) / 1000);
+                
+                if (diffInSeconds < 60) return 'just now';
+                if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+                if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+                return `${Math.floor(diffInSeconds / 86400)}d ago`;
+            }
+
+            // Update the last updated time
+            function updateLastUpdated() {
+                const now = new Date();
+                lastUpdatedText.textContent = `Updated: ${now.toLocaleTimeString()}`;
+            }
+
+            // Display a news item in the grid
+            function displayNewsItem(news, id) {
+                const newsCard = document.createElement('div');
+                newsCard.className = 'news-card';
+                newsCard.setAttribute('data-id', id);
+                
+                const timeAgo = formatTimeAgo(news.timestamp);
+                const excerpt = news.content.length > 100 ? 
+                    news.content.substring(0, 100) + '...' : news.content;
+                
+                newsCard.innerHTML = `
+                    <div class="news-image">
+                        <img src="${news.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'}" alt="${news.title}">
+                    </div>
+                    <div class="news-content">
+                        <span class="news-category">${news.category || 'General'}</span>
+                        <h3 class="news-title">${news.title}</h3>
+                        <p class="news-excerpt">${excerpt}</p>
+                        <div class="news-meta">
+                            <span><i class="far fa-clock"></i> ${timeAgo}</span>
+                            <span><i class="far fa-eye"></i> ${news.views || 0}</span>
+                        </div>
+                    </div>
+                `;
+                
+                newsContainer.appendChild(newsCard);
+            }
+
+            // Load news from Firebase
+            function loadNews() {
+                newsContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading news...</div>';
+                
+                db.collection("news").orderBy("timestamp", "desc").get()
+                .then((querySnapshot) => {
+                    newsContainer.innerHTML = '';
+                    
+                    if (querySnapshot.empty) {
+                        newsContainer.innerHTML = `
+                            <div class="empty">
+                                <i class="fas fa-newspaper"></i>
+                                <p>No news articles found.</p>
+                                <p>Add news to Firebase to see updates here.</p>
+                            </div>
+                        `;
+                        
+                        // Show sample data for demo purposes
+                        sampleNews.forEach(news => displayNewsItem(news));
+                    } else {
+                        querySnapshot.forEach((doc) => {
+                            displayNewsItem(doc.data(), doc.id);
+                        });
+                    }
+                    
+                    updateLastUpdated();
+                    statusIndicator.className = 'status-indicator status-connected';
+                    pullRefreshIndicator.style.display = 'none';
+                })
+                .catch((error) => {
+                    console.error("Error getting news: ", error);
+                    newsContainer.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Error loading news from Firebase.</p>
+                            <p>Showing sample data instead.</p>
+                        </div>
+                    `;
+                    
+                    // Show sample data as fallback
+                    sampleNews.forEach(news => displayNewsItem(news));
+                    
+                    statusIndicator.className = 'status-indicator status-disconnected';
+                    lastUpdatedText.textContent = 'Offline Mode';
+                    pullRefreshIndicator.style.display = 'none';
+                });
+            }
+
+            // Set up real-time listener
+            function setupRealTimeListener() {
+                db.collection("news")
+                    .orderBy("timestamp", "desc")
+                    .onSnapshot((querySnapshot) => {
+                        console.log("Received real-time update from Firebase");
+                        loadNews(); // Reload news when changes detected
+                    }, (error) => {
+                        console.error("Real-time listener error: ", error);
+                        statusIndicator.className = 'status-indicator status-disconnected';
+                        lastUpdatedText.textContent = 'Connection error';
+                    });
+            }
+
+            // Event Listeners
+            refreshNewsBtn.addEventListener('click', function() {
+                pullRefreshIndicator.style.display = 'block';
+                loadNews();
+            });
+
+            // Initialize the news app
+            loadNews();
+            setupRealTimeListener();
+            
+            // Set up periodic refresh every 5 minutes
+            setInterval(loadNews, 300000);
+            
+            // Add pull-to-refresh functionality
+            let touchStartY = 0;
+            let isRefreshing = false;
+            
+            document.addEventListener('touchstart', e => {
+                if (isRefreshing) return;
+                touchStartY = e.touches[0].clientY;
+            });
+            
+            document.addEventListener('touchmove', e => {
+                if (isRefreshing) return;
+                
+                const touchY = e.touches[0].clientY;
+                const pullDistance = touchY - touchStartY;
+                
+                if (pullDistance > 80 && window.scrollY === 0) {
+                    isRefreshing = true;
+                    pullRefreshIndicator.style.display = 'block';
+                    loadNews();
+                    
+                    // Reset after 3 seconds if something goes wrong
+                    setTimeout(() => {
+                        isRefreshing = false;
+                        pullRefreshIndicator.style.display = 'none';
+                    }, 3000);
+                }
+            });
+        }
+
+        // Start the app after the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a moment for Firebase SDK to load, then initialize
+            setTimeout(initApp, 100);
+        });
+
+        // Fallback: if Firebase doesn't load after 5 seconds, show error
+        setTimeout(function() {
+            if (document.getElementById('firebase-loading').style.display !== 'none') {
+                checkFirebaseLoaded();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
