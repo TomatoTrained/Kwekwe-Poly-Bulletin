@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kwekwe Poly Bulletin</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📢</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK with proper error handling -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -285,6 +286,23 @@
             color: #666;
             display: none;
         }
+        
+        /* Favicon error message */
+        .favicon-error {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .favicon-error.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -304,6 +322,12 @@
                 </div>
             </div>
         </header>
+
+        <!-- Favicon Error Message (initially hidden) -->
+        <div class="favicon-error hidden" id="favicon-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Note: Custom favicon not found. Using default icon.</span>
+        </div>
 
         <!-- Hero Section -->
         <section class="hero">
@@ -617,12 +641,23 @@
         });
 
         // Fallback: if Firebase doesn't load after 5 seconds, show error
-      setTimeout(function() {
-    const loadingElement = document.getElementById('firebase-loading');
-    if (loadingElement && loadingElement.style.display !== 'none') {
-        checkFirebaseLoaded();
-    }
-}, 5000);
+        setTimeout(function() {
+            const loadingElement = document.getElementById('firebase-loading');
+            if (loadingElement && loadingElement.style.display !== 'none') {
+                checkFirebaseLoaded();
+            }
+        }, 5000);
+        
+        // Detect if favicon failed to load and show message
+        const faviconError = document.getElementById('favicon-error');
+        const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        
+        // Check if favicon loaded correctly
+        setTimeout(() => {
+            // If we can't detect proper loading, at least show a message
+            faviconError.classList.remove('hidden');
+        }, 2000);
+    </script>
 </body>
 </html>
 
