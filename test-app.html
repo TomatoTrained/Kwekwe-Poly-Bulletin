@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kwekwe Poly Bulletin - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        button {
+            background-color: #1a4b8c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #0d3a6b;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Kwekwe Poly Bulletin - System Test</h1>
+
+    <div class="test-section">
+        <h2>File Structure Test</h2>
+        <div id="file-test-results"></div>
+        <button onclick="testFileStructure()">Test File Structure</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Firebase Configuration Test</h2>
+        <div id="firebase-test-results"></div>
+        <button onclick="testFirebaseConfig()">Test Firebase Config</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Service Worker Test</h2>
+        <div id="sw-test-results"></div>
+        <button onclick="testServiceWorker()">Test Service Worker</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Notification Test</h2>
+        <div id="notification-test-results"></div>
+        <button onclick="testNotifications()">Test Notifications</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Overall Status</h2>
+        <div id="overall-status"></div>
+        <button onclick="runAllTests()">Run All Tests</button>
+    </div>
+
+    <script>
+        function addResult(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            container.appendChild(div);
+        }
+
+        function clearResults(containerId) {
+            document.getElementById(containerId).innerHTML = '';
+        }
+
+        function testFileStructure() {
+            clearResults('file-test-results');
+
+            const requiredFiles = [
+                'indexo.html',
+                'firebase-messaging-sw.js',
+                'manifest.json'
+            ];
+
+            let allFilesExist = true;
+
+            requiredFiles.forEach(file => {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            addResult('file-test-results', `✓ ${file} exists`, 'success');
+                        } else {
+                            addResult('file-test-results', `✗ ${file} not found`, 'error');
+                            allFilesExist = false;
+                        }
+                    })
+                    .catch(error => {
+                        addResult('file-test-results', `✗ ${file} error: ${error.message}`, 'error');
+                        allFilesExist = false;
+                    });
+            });
+
+            setTimeout(() => {
+                if (allFilesExist) {
+                    addResult('file-test-results', 'All required files are present', 'success');
+                } else {
+                    addResult('file-test-results', 'Some files are missing or inaccessible', 'error');
+                }
+            }, 2000);
+        }
+
+        function testFirebaseConfig() {
+            clearResults('firebase-test-results');
+
+            // Test if Firebase SDKs are loaded
+            if (typeof firebase !== 'undefined') {
+                addResult('firebase-test-results', '✓ Firebase SDK loaded', 'success');
+
+                if (typeof firebase.firestore !== 'undefined') {
+                    addResult('firebase-test-results', '✓ Firestore SDK loaded', 'success');
+                } else {
+                    addResult('firebase-test-results', '✗ Firestore SDK not loaded', 'error');
+                }
+
+                if (typeof firebase.messaging !== 'undefined') {
+                    addResult('firebase-test-results', '✓ Messaging SDK loaded', 'success');
+                } else {
+                    addResult('firebase-test-results', '✗ Messaging SDK not loaded', 'error');
+                }
+            } else {
+                addResult('firebase-test-results', '✗ Firebase SDK not loaded', 'error');
+            }
+        }
+
+        function testServiceWorker() {
+            clearResults('sw-test-results');
+
+            if ('serviceWorker' in navigator) {
+                addResult('sw-test-results', '✓ Service Worker supported', 'success');
+
+                navigator.serviceWorker.getRegistration()
+                    .then(registration => {
+                        if (registration) {
+                            addResult('sw-test-results', '✓ Service Worker registered', 'success');
+                        } else {
+                            addResult('sw-test-results', '⚠ Service Worker not registered', 'warning');
+                        }
+                    })
+                    .catch(error => {
+                        addResult('sw-test-results', `✗ Service Worker error: ${error.message}`, 'error');
+                    });
+            } else {
+                addResult('sw-test-results', '✗ Service Worker not supported', 'error');
+            }
+        }
+
+        function testNotifications() {
+            clearResults('notification-test-results');
+
+            if ('Notification' in window) {
+                addResult('notification-test-results', '✓ Notifications supported', 'success');
+
+                if (Notification.permission === 'granted') {
+                    addResult('notification-test-results', '✓ Notification permission granted', 'success');
+                } else if (Notification.permission === 'denied') {
+                    addResult('notification-test-results', '✗ Notification permission denied', 'error');
+                } else {
+                    addResult('notification-test-results', '⚠ Notification permission not requested', 'warning');
+                }
+            } else {
+                addResult('notification-test-results', '✗ Notifications not supported', 'error');
+            }
+        }
+
+        function runAllTests() {
+            clearResults('overall-status');
+            addResult('overall-status', 'Running all tests...', 'info');
+
+            testFileStructure();
+            testFirebaseConfig();
+            testServiceWorker();
+            testNotifications();
+
+            setTimeout(() => {
+                addResult('overall-status', 'All tests completed. Check individual sections for results.', 'info');
+            }, 3000);
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+
+    <!-- Load Firebase SDKs for testing -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+</body>
+
+</html>
