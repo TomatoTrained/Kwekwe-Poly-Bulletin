@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kwekwe Poly Bulletin</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📢</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📢</text></svg>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK with proper error handling -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -16,7 +18,7 @@
             --light: #f5f7fa;
             --dark: #1e293b;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
@@ -24,7 +26,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         body {
             background-color: #f0f4f8;
             color: #333;
@@ -32,14 +34,14 @@
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
             touch-action: manipulation;
         }
-        
+
         .container {
             width: 100%;
             max-width: 100%;
             margin: 0 auto;
             padding: 0 15px;
         }
-        
+
         /* Header Styles */
         header {
             background-color: var(--primary);
@@ -50,24 +52,24 @@
             z-index: 100;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .logo {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .logo h1 {
             font-size: 1.3rem;
             font-weight: 700;
         }
-        
+
         /* Android Navigation */
         .android-nav {
             background-color: white;
@@ -81,7 +83,7 @@
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
             z-index: 100;
         }
-        
+
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -90,17 +92,448 @@
             color: #666;
             font-size: 0.75rem;
             padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        
+
         .nav-item.active {
             color: var(--primary);
+            transform: scale(1.1);
         }
-        
+
+        .nav-item:hover {
+            color: var(--primary);
+        }
+
         .nav-icon {
             font-size: 1.1rem;
             margin-bottom: 4px;
         }
-        
+
+        /* Settings Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 25px;
+        }
+
+        .setting-group h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .setting-label i {
+            color: var(--primary);
+            width: 20px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background-color: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch.active {
+            background-color: var(--primary);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(26px);
+        }
+
+        .select-dropdown {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Page Transitions */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced News Cards */
+        .news-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .news-card:active {
+            transform: translateY(-2px);
+        }
+
+        /* Enhanced Loading States */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Notification Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background-color: #28a745;
+        }
+
+        .toast.error {
+            background-color: #dc3545;
+        }
+
+        /* Dark Mode Styles */
+        .dark-mode {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .app-container {
+            background-color: #1a1a1a;
+        }
+
+        .dark-mode .news-card {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .news-title {
+            color: #ffffff;
+        }
+
+        .dark-mode .news-excerpt {
+            color: #b0b0b0;
+        }
+
+        .dark-mode .news-meta {
+            color: #888;
+        }
+
+        .dark-mode .modal-content {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        .dark-mode .modal-header {
+            background: linear-gradient(135deg, #2d2d2d, #3d3d3d);
+        }
+
+        .dark-mode .setting-item {
+            border-bottom-color: #444;
+        }
+
+        .dark-mode .select-dropdown {
+            background-color: #3d3d3d;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+
+        .dark-mode .android-nav {
+            background-color: #2d2d2d;
+            border-top: 1px solid #444;
+        }
+
+        .dark-mode .nav-item {
+            color: #b0b0b0;
+        }
+
+        .dark-mode .nav-item.active {
+            color: var(--primary);
+        }
+
+        /* Enhanced Animations */
+        .news-card {
+            animation: slideInUp 0.5s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .news-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .news-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .news-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .news-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .news-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced Loading States */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        /* Improved News Grid */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .news-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        /* Enhanced Hero Section */
+        .hero {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(26, 75, 140, 0.8), rgba(255, 153, 0, 0.3));
+            z-index: 1;
+        }
+
+        .hero .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Status Indicator Enhancement */
+        .status-indicator {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced Button Styles */
+        .refresh-btn {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .refresh-btn i {
+            transition: transform 0.3s ease;
+        }
+
+        .refresh-btn:hover i {
+            transform: rotate(180deg);
+        }
+
         /* Hero Section */
         .hero {
             background: linear-gradient(rgba(26, 75, 140, 0.8), rgba(26, 75, 140, 0.9)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
@@ -111,35 +544,35 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        
+
         .hero h2 {
             font-size: 1.6rem;
             margin-bottom: 12px;
         }
-        
+
         .hero p {
             font-size: 0.95rem;
             max-width: 700px;
             margin: 0 auto;
         }
-        
+
         /* News Section */
         .news-section {
             padding: 15px 0 70px;
         }
-        
+
         .section-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
-        
+
         .section-title {
             font-size: 1.3rem;
             color: var(--primary);
         }
-        
+
         .refresh-btn {
             background-color: var(--primary);
             color: white;
@@ -152,35 +585,35 @@
             gap: 5px;
             font-size: 0.9rem;
         }
-        
+
         .news-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 15px;
         }
-        
+
         .news-card {
             background-color: white;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-        
+
         .news-image {
             height: 160px;
             overflow: hidden;
         }
-        
+
         .news-image img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        
+
         .news-content {
             padding: 12px;
         }
-        
+
         .news-category {
             display: inline-block;
             padding: 3px 8px;
@@ -190,45 +623,47 @@
             font-size: 0.75rem;
             margin-bottom: 8px;
         }
-        
+
         .news-title {
             font-size: 1rem;
             margin-bottom: 8px;
             color: var(--dark);
         }
-        
+
         .news-excerpt {
             color: #666;
             margin-bottom: 12px;
             font-size: 0.85rem;
             line-height: 1.5;
         }
-        
+
         .news-meta {
             display: flex;
             justify-content: space-between;
             color: #888;
             font-size: 0.8rem;
         }
-        
+
         /* Loading and Status */
-        .loading, .error, .empty {
+        .loading,
+        .error,
+        .empty {
             text-align: center;
             padding: 25px;
         }
-        
+
         .loading {
             color: var(--primary);
         }
-        
+
         .error {
             color: #dc3545;
         }
-        
+
         .empty {
             color: #666;
         }
-        
+
         .status-indicator {
             display: inline-block;
             width: 8px;
@@ -236,15 +671,15 @@
             border-radius: 50%;
             margin-right: 6px;
         }
-        
+
         .status-connected {
             background-color: #28a745;
         }
-        
+
         .status-disconnected {
             background-color: #dc3545;
         }
-        
+
         /* App Container */
         .app-container {
             max-width: 100%;
@@ -252,33 +687,33 @@
             background: white;
             min-height: 100vh;
         }
-        
+
         /* Firebase loading indicator */
         .firebase-loading {
             text-align: center;
             padding: 20px;
             color: var(--primary);
         }
-        
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 gap: 8px;
             }
-            
+
             .hero h2 {
                 font-size: 1.4rem;
             }
-            
+
             .logo h1 {
                 font-size: 1.2rem;
             }
-            
+
             .news-image {
                 height: 140px;
             }
         }
-        
+
         /* Pull to refresh indicator */
         .pull-refresh {
             text-align: center;
@@ -286,7 +721,7 @@
             color: #666;
             display: none;
         }
-        
+
         /* Favicon error message */
         .favicon-error {
             background-color: #fff3cd;
@@ -299,12 +734,13 @@
             align-items: center;
             gap: 8px;
         }
-        
+
         .favicon-error.hidden {
             display: none;
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Header -->
@@ -359,24 +795,117 @@
             </div>
         </section>
 
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><i class="fas fa-cog"></i> Settings</h2>
+                    <span class="close" id="closeSettings">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="setting-group">
+                        <h3><i class="fas fa-palette"></i> Appearance</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-moon"></i>
+                                <span>Dark Mode</span>
+                            </div>
+                            <div class="toggle-switch" id="darkModeToggle"></div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-paint-brush"></i>
+                                <span>Primary Color</span>
+                            </div>
+                            <input type="color" class="color-picker" id="primaryColorPicker" value="#1a4b8c">
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h3><i class="fas fa-sync-alt"></i> Updates</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-bell"></i>
+                                <span>Auto Refresh</span>
+                            </div>
+                            <div class="toggle-switch active" id="autoRefreshToggle"></div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-clock"></i>
+                                <span>Refresh Interval</span>
+                            </div>
+                            <select class="select-dropdown" id="refreshInterval">
+                                <option value="60000">1 minute</option>
+                                <option value="120000" selected>2 minutes</option>
+                                <option value="300000">5 minutes</option>
+                                <option value="600000">10 minutes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h3><i class="fas fa-database"></i> Data</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-download"></i>
+                                <span>Offline Cache</span>
+                            </div>
+                            <div class="toggle-switch active" id="offlineCacheToggle"></div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-trash"></i>
+                                <span>Clear Cache</span>
+                            </div>
+                            <button class="refresh-btn" id="clearCacheBtn">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <h3><i class="fas fa-info-circle"></i> About</h3>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-code"></i>
+                                <span>Version</span>
+                            </div>
+                            <span>1.2.0</span>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <i class="fas fa-fire"></i>
+                                <span>Firebase Status</span>
+                            </div>
+                            <span id="firebaseStatus">Connected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast">
+            <span id="toastMessage"></span>
+        </div>
+
         <!-- Android Navigation -->
         <nav class="android-nav">
-            <a href="#" class="nav-item active">
+            <div class="nav-item active" data-page="home">
                 <i class="fas fa-home nav-icon"></i>
                 <span>Home</span>
-            </a>
-            <a href="#" class="nav-item">
+            </div>
+            <div class="nav-item" data-page="news">
                 <i class="fas fa-newspaper nav-icon"></i>
                 <span>News</span>
-            </a>
-            <a href="#" class="nav-item">
+            </div>
+            <div class="nav-item" data-page="events">
                 <i class="fas fa-calendar nav-icon"></i>
                 <span>Events</span>
-            </a>
-            <a href="#" class="nav-item">
-                <i class="fas fa-info-circle nav-icon"></i>
-                <span>About</span>
-            </a>
+            </div>
+            <div class="nav-item" data-page="settings">
+                <i class="fas fa-cog nav-icon"></i>
+                <span>Settings</span>
+            </div>
         </nav>
     </div>
 
@@ -422,10 +951,10 @@
             try {
                 firebase.initializeApp(firebaseConfig);
                 const db = firebase.firestore();
-                
+
                 // Hide loading indicator
                 document.getElementById('firebase-loading').style.display = 'none';
-                
+
                 // Now initialize the rest of the app
                 initializeNewsApp(db);
             } catch (error) {
@@ -445,8 +974,83 @@
             }
         }
 
+        // Global variables for settings and app state
+        let appSettings = {
+            darkMode: false,
+            primaryColor: '#1a4b8c',
+            autoRefresh: true,
+            refreshInterval: 120000,
+            offlineCache: true
+        };
+
+        let refreshIntervalId = null;
+        let db = null;
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            toast.className = `toast ${type} show`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('kwekwePolySettings');
+            if (saved) {
+                appSettings = { ...appSettings, ...JSON.parse(saved) };
+            }
+            applySettings();
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            localStorage.setItem('kwekwePolySettings', JSON.stringify(appSettings));
+            applySettings();
+            showToast('Settings saved successfully!');
+        }
+
+        // Apply settings to the app
+        function applySettings() {
+            // Apply dark mode
+            if (appSettings.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+
+            // Apply primary color
+            document.documentElement.style.setProperty('--primary', appSettings.primaryColor);
+
+            // Update UI elements
+            document.getElementById('primaryColorPicker').value = appSettings.primaryColor;
+            document.getElementById('darkModeToggle').classList.toggle('active', appSettings.darkMode);
+            document.getElementById('autoRefreshToggle').classList.toggle('active', appSettings.autoRefresh);
+            document.getElementById('offlineCacheToggle').classList.toggle('active', appSettings.offlineCache);
+            document.getElementById('refreshInterval').value = appSettings.refreshInterval;
+
+            // Update refresh interval
+            if (refreshIntervalId) {
+                clearInterval(refreshIntervalId);
+            }
+            if (appSettings.autoRefresh) {
+                refreshIntervalId = setInterval(() => {
+                    if (db) {
+                        loadNews();
+                    }
+                }, appSettings.refreshInterval);
+            }
+        }
+
         // Initialize the news app after Firebase is ready
-        function initializeNewsApp(db) {
+        function initializeNewsApp(firebaseDb) {
+            db = firebaseDb;
+
             // DOM elements
             const newsContainer = document.getElementById('news-container');
             const refreshNewsBtn = document.getElementById('refresh-news');
@@ -485,11 +1089,11 @@
             // Format date to readable time ago
             function formatTimeAgo(timestamp) {
                 if (!timestamp) return 'Recently';
-                
+
                 const now = new Date();
                 const time = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
                 const diffInSeconds = Math.floor((now - time) / 1000);
-                
+
                 if (diffInSeconds < 60) return 'just now';
                 if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
                 if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
@@ -507,11 +1111,11 @@
                 const newsCard = document.createElement('div');
                 newsCard.className = 'news-card';
                 newsCard.setAttribute('data-id', id);
-                
+
                 const timeAgo = formatTimeAgo(news.timestamp);
-                const excerpt = news.content.length > 100 ? 
+                const excerpt = news.content.length > 100 ?
                     news.content.substring(0, 100) + '...' : news.content;
-                
+
                 newsCard.innerHTML = `
                     <div class="news-image">
                         <img src="${news.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'}" alt="${news.title}">
@@ -526,56 +1130,159 @@
                         </div>
                     </div>
                 `;
-                
+
+                // Add click event to show news detail
+                newsCard.addEventListener('click', function () {
+                    showNewsDetail(news, id);
+                });
+
                 newsContainer.appendChild(newsCard);
+            }
+
+            // Show news detail modal
+            function showNewsDetail(news, id) {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'block';
+
+                const timeAgo = formatTimeAgo(news.timestamp);
+
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-newspaper"></i> ${news.title}</h2>
+                            <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="news-detail-image" style="width: 100%; height: 200px; margin-bottom: 20px; border-radius: 8px; overflow: hidden;">
+                                <img src="${news.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'}" 
+                                     alt="${news.title}" 
+                                     style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <span class="news-category">${news.category || 'General'}</span>
+                                <span style="color: #666; font-size: 0.9rem;">
+                                    <i class="far fa-clock"></i> ${timeAgo}
+                                </span>
+                                <span style="color: #666; font-size: 0.9rem;">
+                                    <i class="far fa-eye"></i> ${news.views || 0} views
+                                </span>
+                            </div>
+                            <div style="line-height: 1.6; color: #333;">
+                                ${news.content.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+                document.body.style.overflow = 'hidden';
+
+                // Close modal when clicking outside
+                modal.addEventListener('click', function (e) {
+                    if (e.target === modal) {
+                        modal.remove();
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            }
+
+            // Cache news data for offline use
+            function cacheNewsData(newsData) {
+                if (appSettings.offlineCache) {
+                    const cacheData = {
+                        data: newsData,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('kwekwePolyCache', JSON.stringify(cacheData));
+                }
+            }
+
+            // Load cached news data
+            function loadCachedNews() {
+                const cached = localStorage.getItem('kwekwePolyCache');
+                if (cached) {
+                    const cacheData = JSON.parse(cached);
+                    const cacheAge = Date.now() - cacheData.timestamp;
+                    const maxCacheAge = 24 * 60 * 60 * 1000; // 24 hours
+
+                    if (cacheAge < maxCacheAge) {
+                        return cacheData.data;
+                    }
+                }
+                return null;
             }
 
             // Load news from Firebase
             function loadNews() {
                 newsContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading news...</div>';
-                
+
                 db.collection("news").orderBy("timestamp", "desc").get()
-                .then((querySnapshot) => {
-                    newsContainer.innerHTML = '';
-                    
-                    if (querySnapshot.empty) {
-                        newsContainer.innerHTML = `
+                    .then((querySnapshot) => {
+                        newsContainer.innerHTML = '';
+
+                        if (querySnapshot.empty) {
+                            newsContainer.innerHTML = `
                             <div class="empty">
                                 <i class="fas fa-newspaper"></i>
                                 <p>No news articles found.</p>
                                 <p>Add news to Firebase to see updates here.</p>
                             </div>
                         `;
-                        
-                        // Show sample data for demo purposes
-                        sampleNews.forEach(news => displayNewsItem(news));
-                    } else {
-                        querySnapshot.forEach((doc) => {
-                            displayNewsItem(doc.data(), doc.id);
-                        });
-                    }
-                    
-                    updateLastUpdated();
-                    statusIndicator.className = 'status-indicator status-connected';
-                    pullRefreshIndicator.style.display = 'none';
-                })
-                .catch((error) => {
-                    console.error("Error getting news: ", error);
-                    newsContainer.innerHTML = `
-                        <div class="error">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <p>Error loading news from Firebase.</p>
-                            <p>Showing sample data instead.</p>
-                        </div>
-                    `;
-                    
-                    // Show sample data as fallback
-                    sampleNews.forEach(news => displayNewsItem(news));
-                    
-                    statusIndicator.className = 'status-indicator status-disconnected';
-                    lastUpdatedText.textContent = 'Offline Mode';
-                    pullRefreshIndicator.style.display = 'none';
-                });
+
+                            // Show sample data for demo purposes
+                            sampleNews.forEach(news => displayNewsItem(news));
+                        } else {
+                            const newsData = [];
+                            querySnapshot.forEach((doc) => {
+                                const newsItem = doc.data();
+                                newsItem.id = doc.id;
+                                newsData.push(newsItem);
+                                displayNewsItem(newsItem, doc.id);
+                            });
+
+                            // Cache the data
+                            cacheNewsData(newsData);
+                        }
+
+                        updateLastUpdated();
+                        statusIndicator.className = 'status-indicator status-connected';
+                        document.getElementById('firebaseStatus').textContent = 'Connected';
+                        pullRefreshIndicator.style.display = 'none';
+                    })
+                    .catch((error) => {
+                        console.error("Error getting news: ", error);
+
+                        // Try to load cached data
+                        const cachedNews = loadCachedNews();
+                        if (cachedNews && cachedNews.length > 0) {
+                            newsContainer.innerHTML = `
+                            <div class="empty">
+                                <i class="fas fa-wifi"></i>
+                                <p>Using cached data (offline mode)</p>
+                                <p>Last updated: ${new Date(JSON.parse(localStorage.getItem('kwekwePolyCache')).timestamp).toLocaleString()}</p>
+                            </div>
+                        `;
+                            cachedNews.forEach(news => displayNewsItem(news, news.id));
+                            showToast('Using cached data - check your connection', 'error');
+                        } else {
+                            newsContainer.innerHTML = `
+                            <div class="error">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <p>Error loading news from Firebase.</p>
+                                <p>Showing sample data instead.</p>
+                            </div>
+                        `;
+
+                            // Show sample data as fallback
+                            sampleNews.forEach(news => displayNewsItem(news));
+                        }
+
+                        statusIndicator.className = 'status-indicator status-disconnected';
+                        document.getElementById('firebaseStatus').textContent = 'Disconnected';
+                        lastUpdatedText.textContent = 'Offline Mode';
+                        pullRefreshIndicator.style.display = 'none';
+                    });
             }
 
             // Set up real-time listener
@@ -584,7 +1291,31 @@
                     .orderBy("timestamp", "desc")
                     .onSnapshot((querySnapshot) => {
                         console.log("Received real-time update from Firebase");
-                        loadNews(); // Reload news when changes detected
+                        console.log("Changes detected:", querySnapshot.docChanges().length);
+
+                        // Clear container and rebuild with new data
+                        newsContainer.innerHTML = '';
+
+                        if (querySnapshot.empty) {
+                            newsContainer.innerHTML = `
+                            <div class="empty">
+                                <i class="fas fa-newspaper"></i>
+                                <p>No news articles found.</p>
+                                <p>Add news to Firebase to see updates here.</p>
+                            </div>
+                        `;
+
+                            // Show sample data for demo purposes
+                            sampleNews.forEach(news => displayNewsItem(news));
+                        } else {
+                            querySnapshot.forEach((doc) => {
+                                displayNewsItem(doc.data(), doc.id);
+                            });
+                        }
+
+                        updateLastUpdated();
+                        statusIndicator.className = 'status-indicator status-connected';
+                        pullRefreshIndicator.style.display = 'none';
                     }, (error) => {
                         console.error("Real-time listener error: ", error);
                         statusIndicator.className = 'status-indicator status-disconnected';
@@ -593,7 +1324,7 @@
             }
 
             // Event Listeners
-            refreshNewsBtn.addEventListener('click', function() {
+            refreshNewsBtn.addEventListener('click', function () {
                 pullRefreshIndicator.style.display = 'block';
                 loadNews();
             });
@@ -601,30 +1332,32 @@
             // Initialize the news app
             loadNews();
             setupRealTimeListener();
-            
-            // Set up periodic refresh every 5 minutes
-            setInterval(loadNews, 300000);
-            
+
+            // Set up periodic refresh based on settings
+            if (appSettings.autoRefresh) {
+                refreshIntervalId = setInterval(loadNews, appSettings.refreshInterval);
+            }
+
             // Add pull-to-refresh functionality
             let touchStartY = 0;
             let isRefreshing = false;
-            
+
             document.addEventListener('touchstart', e => {
                 if (isRefreshing) return;
                 touchStartY = e.touches[0].clientY;
             });
-            
+
             document.addEventListener('touchmove', e => {
                 if (isRefreshing) return;
-                
+
                 const touchY = e.touches[0].clientY;
                 const pullDistance = touchY - touchStartY;
-                
+
                 if (pullDistance > 80 && window.scrollY === 0) {
                     isRefreshing = true;
                     pullRefreshIndicator.style.display = 'block';
                     loadNews();
-                    
+
                     // Reset after 3 seconds if something goes wrong
                     setTimeout(() => {
                         isRefreshing = false;
@@ -634,24 +1367,134 @@
             });
         }
 
+        // Navigation functionality
+        function initializeNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    const page = this.getAttribute('data-page');
+
+                    // Update active nav item
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Handle different pages
+                    switch (page) {
+                        case 'home':
+                            showToast('Welcome to Kwekwe Poly Bulletin!');
+                            break;
+                        case 'news':
+                            showToast('News feed refreshed!');
+                            if (db) loadNews();
+                            break;
+                        case 'events':
+                            showToast('Events page coming soon!');
+                            break;
+                        case 'settings':
+                            openSettingsModal();
+                            break;
+                    }
+                });
+            });
+        }
+
+        // Settings modal functionality
+        function initializeSettings() {
+            const settingsModal = document.getElementById('settingsModal');
+            const closeSettings = document.getElementById('closeSettings');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const primaryColorPicker = document.getElementById('primaryColorPicker');
+            const autoRefreshToggle = document.getElementById('autoRefreshToggle');
+            const refreshInterval = document.getElementById('refreshInterval');
+            const offlineCacheToggle = document.getElementById('offlineCacheToggle');
+            const clearCacheBtn = document.getElementById('clearCacheBtn');
+
+            // Open settings modal
+            function openSettingsModal() {
+                settingsModal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+
+            // Close settings modal
+            function closeSettingsModal() {
+                settingsModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+
+            // Toggle switches
+            function toggleSwitch(element, settingKey) {
+                element.addEventListener('click', function () {
+                    this.classList.toggle('active');
+                    appSettings[settingKey] = this.classList.contains('active');
+                    saveSettings();
+                });
+            }
+
+            // Event listeners
+            closeSettings.addEventListener('click', closeSettingsModal);
+
+            // Close modal when clicking outside
+            settingsModal.addEventListener('click', function (e) {
+                if (e.target === settingsModal) {
+                    closeSettingsModal();
+                }
+            });
+
+            // Toggle switches
+            toggleSwitch(darkModeToggle, 'darkMode');
+            toggleSwitch(autoRefreshToggle, 'autoRefresh');
+            toggleSwitch(offlineCacheToggle, 'offlineCache');
+
+            // Color picker
+            primaryColorPicker.addEventListener('change', function () {
+                appSettings.primaryColor = this.value;
+                saveSettings();
+            });
+
+            // Refresh interval
+            refreshInterval.addEventListener('change', function () {
+                appSettings.refreshInterval = parseInt(this.value);
+                saveSettings();
+            });
+
+            // Clear cache
+            clearCacheBtn.addEventListener('click', function () {
+                if (confirm('Are you sure you want to clear the cache?')) {
+                    localStorage.removeItem('kwekwePolyCache');
+                    showToast('Cache cleared successfully!', 'success');
+                }
+            });
+
+            // Make openSettingsModal globally available
+            window.openSettingsModal = openSettingsModal;
+        }
+
         // Start the app after the page loads
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
+            // Load settings first
+            loadSettings();
+
+            // Initialize navigation and settings
+            initializeNavigation();
+            initializeSettings();
+
             // Wait a moment for Firebase SDK to load, then initialize
             setTimeout(initApp, 100);
         });
 
         // Fallback: if Firebase doesn't load after 5 seconds, show error
-        setTimeout(function() {
+        setTimeout(function () {
             const loadingElement = document.getElementById('firebase-loading');
             if (loadingElement && loadingElement.style.display !== 'none') {
                 checkFirebaseLoaded();
             }
         }, 5000);
-        
+
         // Detect if favicon failed to load and show message
         const faviconError = document.getElementById('favicon-error');
         const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-        
+
         // Check if favicon loaded correctly
         setTimeout(() => {
             // If we can't detect proper loading, at least show a message
@@ -659,5 +1502,7 @@
         }, 2000);
     </script>
 </body>
+
 </html>
+
 
