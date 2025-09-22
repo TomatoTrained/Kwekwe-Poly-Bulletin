@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kwekwe Poly Bulletin - News Updates</title>
+    <meta name="theme-color" content="#1a4b8c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Kwekwe Poly Bulletin">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    <style>
+        :root {
+            --primary: #1a4b8c;
+            --secondary: #ff9900;
+            --light: #f5f7fa;
+            --dark: #1e293b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(26, 75, 140, 0.8), rgba(26, 75, 140, 0.9)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .hero h2 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* News Section */
+        .news-section {
+            padding: 20px 0 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .refresh-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .news-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .news-image {
+            height: 160px;
+            overflow: hidden;
+        }
+
+        .news-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s;
+        }
+
+        .news-card:hover .news-image img {
+            transform: scale(1.05);
+        }
+
+        .news-content {
+            padding: 15px;
+        }
+
+        .news-category {
+            display: inline-block;
+            padding: 4px 10px;
+            background-color: var(--secondary);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .news-title {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .news-excerpt {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        /* Loading and Error States */
+        .loading,
+        .error,
+        .empty {
+            text-align: center;
+            padding: 30px;
+            grid-column: 1 / -1;
+        }
+
+        .loading {
+            color: var(--primary);
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .empty {
+            color: #666;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .hero h2 {
+                font-size: 1.7rem;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background-color: #28a745;
+        }
+
+        .status-disconnected {
+            background-color: #dc3545;
+        }
+
+        /* Push Notification Styles */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ff4444;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .notification-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .notification-item.urgent {
+            border-left-color: #ff4444;
+            background-color: #fff5f5;
+        }
+
+        .notification-item.exam {
+            border-left-color: #ff9900;
+            background-color: #fffaf0;
+        }
+
+        .notification-item.event {
+            border-left-color: #28a745;
+            background-color: #f0fff4;
+        }
+
+        .notification-item.timetable {
+            border-left-color: #17a2b8;
+            background-color: #f0f8ff;
+        }
+
+        .notification-title {
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .notification-content {
+            color: #666;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .notification-time {
+            color: #888;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+
+        .notification-category {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .category-urgent {
+            background-color: #ff4444;
+            color: white;
+        }
+
+        .category-exam {
+            background-color: #ff9900;
+            color: white;
+        }
+
+        .category-event {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .category-timetable {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        /* Enhanced Mobile Navigation */
+        .nav-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #666;
+            font-size: 0.75rem;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .nav-item:hover {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .nav-item.has-notifications .nav-icon::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background-color: #ff4444;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* Android Navigation */
+        .android-nav {
+            background-color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background-color: white;
+            z-index: 1002;
+            transition: right 0.3s ease;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        .notification-panel.open {
+            right: 0;
+        }
+
+        .notification-panel-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-panel-body {
+            padding: 20px;
+        }
+
+        .notification-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            display: none;
+        }
+
+        .notification-panel-overlay.show {
+            display: block;
+        }
+
+        /* Enhanced Content Categories */
+        .content-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .category-filter {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background-color: #f0f0f0;
+            color: #666;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .category-filter.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .category-filter:hover {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background-color: #28a745;
+        }
+
+        .toast.error {
+            background-color: #dc3545;
+        }
+
+        /* Enhanced News Cards with Categories */
+        .news-card.urgent {
+            border-left: 4px solid #ff4444;
+        }
+
+        .news-card.exam {
+            border-left: 4px solid #ff9900;
+        }
+
+        .news-card.event {
+            border-left: 4px solid #28a745;
+        }
+
+        .news-card.timetable {
+            border-left: 4px solid #17a2b8;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .notification-panel {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .content-categories {
+                padding: 0 15px;
+            }
+
+            .news-section {
+                padding-bottom: 80px;
+                /* Space for mobile nav */
+            }
+        }
+    </style>
+    <style>
+        /* Premium look overrides - no logic changes */
+        * {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, #f3f6fb 0%, #eef2f8 60%, #e9eef6 100%);
+            color: #1f2937;
+        }
+
+        header {
+            background: linear-gradient(135deg, #163e75, #1a4b8c);
+            box-shadow: 0 8px 24px rgba(2, 8, 23, 0.12);
+            backdrop-filter: blur(8px);
+        }
+
+        .hero {
+            background: linear-gradient(rgba(17, 24, 39, 0.55), rgba(17, 24, 39, 0.55)), url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1400&q=80');
+            box-shadow: 0 6px 18px rgba(2, 8, 23, 0.08);
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            padding: 56px 0;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #1a4b8c, #2060b3);
+            padding: 10px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(2, 8, 23, 0.06);
+            transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(2, 8, 23, 0.12);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+            opacity: 0.95;
+        }
+
+        .news-card {
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(2, 8, 23, 0.06);
+            border: 1px solid rgba(2, 8, 23, 0.05);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 40px rgba(2, 8, 23, 0.18);
+        }
+
+        .news-image img {
+            transition: transform 0.5s ease;
+        }
+
+        .news-content {
+            padding: 16px;
+        }
+
+        .news-category {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #ff9900, #ffb547);
+            color: #111827;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.78rem;
+            margin-bottom: 12px;
+        }
+
+        .news-title {
+            letter-spacing: -0.01em;
+        }
+
+        .news-excerpt {
+            color: #6b7280;
+            font-size: 0.92rem;
+        }
+
+        .news-meta {
+            color: #8a93a3;
+        }
+
+        .notification-badge {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            box-shadow: 0 2px 10px rgba(2, 8, 23, 0.12);
+        }
+
+        .notification-item {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 2px 10px rgba(2, 8, 23, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .notification-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(2, 8, 23, 0.12);
+        }
+
+        .notification-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(14px);
+            box-shadow: -8px 0 24px rgba(2, 8, 23, 0.18);
+            max-width: 420px;
+        }
+
+        .notification-panel-header {
+            background: linear-gradient(135deg, #163e75, #1a4b8c);
+            box-shadow: 0 2px 10px rgba(2, 8, 23, 0.06);
+        }
+
+        .notification-panel-overlay {
+            background-color: rgba(2, 8, 23, 0.45);
+        }
+
+        .content-categories {
+            padding: 10px 0;
+        }
+
+        .category-filter {
+            border-radius: 999px;
+            background-color: #f3f4f6;
+            color: #374151;
+            box-shadow: 0 2px 10px rgba(2, 8, 23, 0.06);
+            transition: all 0.2s ease;
+        }
+
+        .category-filter.active {
+            background: linear-gradient(135deg, #1a4b8c, #2060b3);
+            color: white;
+            border-color: transparent;
+        }
+
+        .category-filter:hover {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+
+        .toast {
+            top: 24px;
+            right: 24px;
+            background: rgba(26, 75, 140, 0.92);
+            padding: 14px 22px;
+            border-radius: 12px;
+            box-shadow: 0 16px 40px rgba(2, 8, 23, 0.18);
+            transition: transform 0.28s ease, opacity 0.28s ease;
+            backdrop-filter: blur(6px);
+        }
+
+        .android-nav {
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 -10px 20px rgba(2, 8, 23, 0.08);
+            border-top: 1px solid rgba(2, 8, 23, 0.06);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .news-card {
+            animation: fadeInUp 0.35s ease both;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-school fa-2x"></i>
+                    <h1>Kwekwe Poly Bulletin</h1>
+                </div>
+                <div class="last-updated" id="last-updated">
+                    <span class="status-indicator status-connected" id="status-indicator"></span>
+                    <span id="last-updated-text">Connected </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>Latest News from Kwekwe Poly</h2>
+            <p>Stay updated with the latest announcements and news from Kwekwe Polytechnic</p>
+        </div>
+    </section>
+
+    <!-- News Section -->
+    <section class="news-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Campus News</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="refresh-btn" id="refresh-news">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="refresh-btn" id="notification-btn" style="position: relative;">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notification-count" style="display: none;">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Categories Filter -->
+            <div class="content-categories">
+                <div class="category-filter active" data-category="all">All</div>
+                <div class="category-filter" data-category="urgent">Urgent</div>
+                <div class="category-filter" data-category="exam">Exams</div>
+                <div class="category-filter" data-category="event">Events</div>
+                <div class="category-filter" data-category="timetable">Timetable</div>
+                <div class="category-filter" data-category="academic">Academic</div>
+                <div class="category-filter" data-category="sports">Sports</div>
+                <div class="category-filter" data-category="campus">Campus</div>
+            </div>
+
+            <div class="news-grid" id="news-container">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Connecting ...
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Kwekwe Poly Bulletin - News Update System</p>
+            <p>This app automatically updates when new content is added </p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel-overlay" id="notification-overlay"></div>
+    <div class="notification-panel" id="notification-panel">
+        <div class="notification-panel-header">
+            <h2><i class="fas fa-bell"></i> Notifications</h2>
+            <button class="close" id="close-notifications">&times;</button>
+        </div>
+        <div class="notification-panel-body">
+            <div id="notifications-container">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading notifications...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="android-nav">
+        <div class="nav-item active" data-page="home">
+            <i class="fas fa-home nav-icon"></i>
+            <span>Home</span>
+        </div>
+        <div class="nav-item" data-page="news">
+            <i class="fas fa-newspaper nav-icon"></i>
+            <span>News</span>
+        </div>
+        <div class="nav-item" data-page="notifications" id="nav-notifications">
+            <i class="fas fa-bell nav-icon"></i>
+            <span>Alerts</span>
+        </div>
+        <div class="nav-item" data-page="events">
+            <i class="fas fa-calendar nav-icon"></i>
+            <span>Events</span>
+        </div>
+    </nav>
+
+    <script>
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAL7NNio6HiW6sEG6D7ICwUGVgtui8VVns",
+            authDomain: "kwekwe-poly-bulletin.firebaseapp.com",
+            projectId: "kwekwe-poly-bulletin",
+            storageBucket: "kwekwe-poly-bulletin.firebasestorage.app",
+            messagingSenderId: "988682570917",
+            appId: "1:988682570917:web:8e66c6fbe54384a56a914c",
+            measurementId: "G-JE1FN4M7Y3"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Enable offline persistence with new method
+        db.settings({
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+        });
+
+        // DOM elements
+        const newsContainer = document.getElementById('news-container');
+        const refreshNewsBtn = document.getElementById('refresh-news');
+        const lastUpdatedText = document.getElementById('last-updated-text');
+        const statusIndicator = document.getElementById('status-indicator');
+
+        // Global variables for notifications
+        let notifications = [];
+        let messaging = null;
+        let initialRealTimeSyncDone = false;
+
+        // Format date to readable time ago
+        function formatTimeAgo(timestamp) {
+            if (!timestamp) return 'Recently';
+
+            const now = new Date();
+            const time = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            const diffInSeconds = Math.floor((now - time) / 1000);
+
+            if (diffInSeconds < 60) return 'just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        }
+
+        // Update the last updated time
+        function updateLastUpdated() {
+            const now = new Date();
+            lastUpdatedText.textContent = `Updated: ${now.toLocaleTimeString()}`;
+        }
+
+        // Display a news item in the grid
+        function displayNewsItem(news, id) {
+            const newsCard = document.createElement('div');
+            newsCard.className = 'news-card';
+            newsCard.setAttribute('data-id', id);
+
+            const timeAgo = formatTimeAgo(news.timestamp);
+            const content = news.content || news.description || 'No content available';
+            const excerpt = content.length > 100 ?
+                content.substring(0, 100) + '...' : content;
+
+            // Fix category spaces issue - convert spaces to hyphens for CSS classes
+            const category = news.category || 'General';
+            const categoryClass = category.toLowerCase().replace(/\s+/g, '-');
+
+            newsCard.innerHTML = `
+                <div class="news-image">
+                    <img src="${news.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'}" alt="${news.title}">
+                </div>
+                <div class="news-content">
+                    <span class="news-category">${category}</span>
+                    <h3 class="news-title">${news.title}</h3>
+                    <p class="news-excerpt">${excerpt}</p>
+                    <div class="news-meta">
+                        <span><i class="far fa-clock"></i> ${timeAgo}</span>
+                        <span><i class="far fa-eye"></i> ${news.views || 0}</span>
+                    </div>
+                </div>
+            `;
+
+            // Add category class safely (only if it doesn't contain spaces)
+            if (!category.includes(' ')) {
+                newsCard.classList.add(categoryClass);
+            }
+
+            newsContainer.appendChild(newsCard);
+        }
+
+        // Load news from Firebase
+        function loadNews() {
+            newsContainer.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading news...</div>';
+
+            db.collection("news").orderBy("timestamp", "desc").get()
+                .then((querySnapshot) => {
+                    newsContainer.innerHTML = '';
+
+                    if (querySnapshot.empty) {
+                        newsContainer.innerHTML = `
+                        <div class="empty">
+                            <i class="fas fa-newspaper"></i>
+                            <p>No news articles found.</p>
+                            <p> "news" collection  here.</p>
+                        </div>
+                    `;
+                    } else {
+                        querySnapshot.forEach((doc) => {
+                            displayNewsItem(doc.data(), doc.id);
+                        });
+                    }
+
+                    updateLastUpdated();
+                    statusIndicator.className = 'status-indicator status-connected';
+                })
+                .catch((error) => {
+                    console.error("Error getting news: ", error);
+                    newsContainer.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>Error loading news .</p>
+                        <p>Check console for details.</p>
+                    </div>
+                `;
+                    statusIndicator.className = 'status-indicator status-disconnected';
+                    lastUpdatedText.textContent = 'Connection error';
+                });
+        }
+
+        // Set up real-time listener
+        function setupRealTimeListener() {
+            db.collection("news")
+                .orderBy("timestamp", "desc")
+                .onSnapshot((querySnapshot) => {
+                    console.log("Received real-time update");
+                    // Detect new items and notify simply
+                    try {
+                        const docs = querySnapshot.docs || [];
+                        if (docs.length > 0) {
+                            const latestTsMs = Math.max(...docs.map(d => {
+                                const t = d.data().timestamp;
+                                const dt = t && typeof t.toDate === 'function' ? t.toDate() : (t ? new Date(t) : new Date(0));
+                                return dt.getTime();
+                            }));
+
+                            const lastSeenStr = localStorage.getItem('kpb_lastSeenNewsTs');
+                            const lastSeenMs = lastSeenStr ? parseInt(lastSeenStr, 10) : 0;
+
+                            if (!initialRealTimeSyncDone) {
+                                // First sync: set baseline, no notification to avoid spam
+                                localStorage.setItem('kpb_lastSeenNewsTs', String(latestTsMs));
+                                initialRealTimeSyncDone = true;
+                            } else if (latestTsMs > lastSeenMs) {
+                                const newDocs = docs.filter(d => {
+                                    const t = d.data().timestamp;
+                                    const dt = t && typeof t.toDate === 'function' ? t.toDate() : (t ? new Date(t) : new Date(0));
+                                    return dt.getTime() > lastSeenMs;
+                                });
+                                const countNew = newDocs.length;
+                                if (countNew > 0) {
+                                    const firstTitle = (newDocs[0].data().title || 'New update');
+                                    showToast(`${countNew} new update${countNew > 1 ? 's' : ''}: ${firstTitle}`);
+                                    addNotification({
+                                        title: 'New campus update',
+                                        content: `${countNew} new item${countNew > 1 ? 's' : ''} in News.`,
+                                        category: 'campus',
+                                        timestamp: new Date(),
+                                        urgent: false,
+                                        read: false
+                                    });
+                                    localStorage.setItem('kpb_lastSeenNewsTs', String(latestTsMs));
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('New update detection failed:', e);
+                    }
+                    loadNews(); // Reload news when changes detected
+                }, (error) => {
+                    console.error("Real-time listener error: ", error);
+                    statusIndicator.className = 'status-indicator status-disconnected';
+                    lastUpdatedText.textContent = 'Connection error';
+                });
+        }
+
+        // Event Listeners
+        refreshNewsBtn.addEventListener('click', loadNews);
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            toastMessage.textContent = message;
+            toast.className = `toast ${type} show`;
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize Firebase Messaging (safely)
+        function initializeFirebaseMessaging() {
+            try {
+                if (typeof firebase.messaging !== 'undefined') {
+                    messaging = firebase.messaging();
+                    console.log('Firebase Messaging initialized');
+                } else {
+                    console.warn('Firebase Messaging not available');
+                }
+            } catch (error) {
+                console.error('Firebase Messaging initialization error:', error);
+            }
+        }
+
+        // Add notification to the list
+        function addNotification(notification) {
+            notifications.unshift(notification);
+            updateNotificationBadge();
+            saveNotifications();
+        }
+
+        // Update notification badge
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notification-count');
+            const navNotifications = document.getElementById('nav-notifications');
+            const unreadCount = notifications.filter(n => !n.read).length;
+
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.style.display = 'flex';
+                navNotifications.classList.add('has-notifications');
+            } else {
+                badge.style.display = 'none';
+                navNotifications.classList.remove('has-notifications');
+            }
+        }
+
+        // Save notifications to localStorage
+        function saveNotifications() {
+            localStorage.setItem('kwekwePolyNotifications', JSON.stringify(notifications));
+        }
+
+        // Load notifications from localStorage
+        function loadNotifications() {
+            const saved = localStorage.getItem('kwekwePolyNotifications');
+            if (saved) {
+                notifications = JSON.parse(saved);
+                updateNotificationBadge();
+            }
+        }
+
+        // Display notifications in the panel
+        function displayNotifications() {
+            const container = document.getElementById('notifications-container');
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>No notifications yet</p>
+                        <p>You'll receive alerts for urgent updates here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => `
+                <div class="notification-item ${notification.category} ${notification.urgent ? 'urgent' : ''}" 
+                     onclick="markNotificationAsRead('${notification.id || Date.now()}')">
+                    <div class="notification-category category-${notification.category}">
+                        ${notification.category.toUpperCase()}
+                    </div>
+                    <div class="notification-title">${notification.title}</div>
+                    <div class="notification-content">${notification.content}</div>
+                    <div class="notification-time">${formatTimeAgo(notification.timestamp)}</div>
+                </div>
+            `).join('');
+        }
+
+        // Mark notification as read
+        function markNotificationAsRead(notificationId) {
+            const notification = notifications.find(n => (n.id || Date.now()) === notificationId);
+            if (notification) {
+                notification.read = true;
+                updateNotificationBadge();
+                saveNotifications();
+                displayNotifications();
+            }
+        }
+
+        // Add sample notifications for demonstration
+        function addSampleNotifications() {
+            if (notifications.length === 0) {
+                const sampleNotifications = [
+                    {
+                        title: "Final Exams Schedule Released",
+                        content: "The final examination schedule for Semester 1 has been published. Check your student portal for details.",
+                        category: "exam",
+                        timestamp: new Date(Date.now() - 3600000), // 1 hour ago
+                        urgent: true
+                    },
+                    {
+                        title: "Timetable Changes - Week 12",
+                        content: "There have been changes to the timetable for Week 12. Please check the updated schedule.",
+                        category: "timetable",
+                        timestamp: new Date(Date.now() - 7200000), // 2 hours ago
+                        urgent: false
+                    },
+                    {
+                        title: "Sports Day Event Tomorrow",
+                        content: "Annual Sports Day will be held tomorrow at the main field. All students are encouraged to participate.",
+                        category: "event",
+                        timestamp: new Date(Date.now() - 86400000), // 1 day ago
+                        urgent: false
+                    }
+                ];
+
+                sampleNotifications.forEach(notification => {
+                    addNotification(notification);
+                });
+            }
+        }
+
+        // Category filtering
+        function filterNewsByCategory(category) {
+            const newsCards = document.querySelectorAll('.news-card');
+            newsCards.forEach(card => {
+                if (category === 'all' || card.classList.contains(category)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Initialize mobile navigation
+        function initializeNavigation() {
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', function () {
+                    const page = this.getAttribute('data-page');
+
+                    // Update active nav item
+                    navItems.forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Handle different pages
+                    switch (page) {
+                        case 'home':
+                            showToast('Welcome to Kwekwe Poly Bulletin!');
+                            break;
+                        case 'news':
+                            showToast('News feed refreshed!');
+                            loadNews();
+                            break;
+                        case 'notifications':
+                            openNotificationPanel();
+                            break;
+                        case 'events':
+                            showToast('Events page coming soon!');
+                            break;
+                    }
+                });
+            });
+        }
+
+        // Notification panel management
+        function openNotificationPanel() {
+            const notificationPanel = document.getElementById('notification-panel');
+            const notificationOverlay = document.getElementById('notification-overlay');
+
+            notificationPanel.classList.add('open');
+            notificationOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            displayNotifications();
+        }
+
+        function closeNotificationPanel() {
+            const notificationPanel = document.getElementById('notification-panel');
+            const notificationOverlay = document.getElementById('notification-overlay');
+
+            notificationPanel.classList.remove('open');
+            notificationOverlay.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("Initializing Kwekwe Poly Bulletin ");
+
+            // Load notifications
+            loadNotifications();
+
+            // Add sample notifications for demonstration
+            addSampleNotifications();
+
+            // Initialize Firebase Messaging
+            initializeFirebaseMessaging();
+
+            // Initialize navigation
+            initializeNavigation();
+
+            // Set up notification panel event listeners
+            const notificationBtn = document.getElementById('notification-btn');
+            const closeNotifications = document.getElementById('close-notifications');
+            const notificationOverlay = document.getElementById('notification-overlay');
+
+            notificationBtn.addEventListener('click', openNotificationPanel);
+            closeNotifications.addEventListener('click', closeNotificationPanel);
+            notificationOverlay.addEventListener('click', closeNotificationPanel);
+
+            // Set up category filtering
+            const categoryFilters = document.querySelectorAll('.category-filter');
+            categoryFilters.forEach(filter => {
+                filter.addEventListener('click', function () {
+                    // Update active filter
+                    categoryFilters.forEach(f => f.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Filter news by category
+                    const selectedCategory = this.getAttribute('data-category');
+                    filterNewsByCategory(selectedCategory);
+                });
+            });
+
+            // Load news and set up real-time listener
+            loadNews();
+            setupRealTimeListener();
+
+            // Set up periodic refresh every 2 minutes (optional)
+            setInterval(loadNews, 120000);
+        });
+    </script>
+</body>
+
+</html>
