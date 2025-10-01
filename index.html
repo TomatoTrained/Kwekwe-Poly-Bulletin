@@ -804,6 +804,22 @@
             margin: 0 auto 16px;
         }
 
+        .payment-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .payment-row input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            outline: none;
+        }
+
         .auth-row {
             display: grid;
             grid-template-columns: 1fr;
@@ -909,6 +925,8 @@
                     <div>
                         <div style="font-size:0.85rem; color:#6b7280;">Student</div>
                         <div id="finance-student" style="font-weight:700; color:#111827;">-</div>
+                        <div id="finance-programme" style="font-size:0.9rem; color:#374151;">Programme: -</div>
+                        <div id="finance-year" style="font-size:0.9rem; color:#374151;">Year: -</div>
                     </div>
                     <button class="btn secondary" id="finance-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
                 </div>
@@ -929,6 +947,10 @@
                 <div class="finance-actions">
                     <button class="btn" id="finance-refresh"><i class="fas fa-sync-alt"></i> Refresh Balance</button>
                     <button class="btn secondary" id="finance-cache"><i class="fas fa-cloud-download-alt"></i> Offline Copy</button>
+                </div>
+                <div class="payment-row">
+                    <input id="finance-amount" type="number" step="0.01" min="0" placeholder="Enter amount to pay">
+                    <button class="btn" id="finance-pay"><i class="fas fa-credit-card"></i> Pay</button>
                 </div>
                 <div class="finance-note" id="finance-updated">Last updated: -</div>
             </div>
@@ -1026,10 +1048,14 @@
         const studentIdInput = document.getElementById('student-id');
         const studentPassInput = document.getElementById('student-pass');
         const financeStudent = document.getElementById('finance-student');
+        const financeProgramme = document.getElementById('finance-programme');
+        const financeYear = document.getElementById('finance-year');
         const feeTotal = document.getElementById('fee-total');
         const feePaid = document.getElementById('fee-paid');
         const feeOutstanding = document.getElementById('fee-outstanding');
         const financeUpdated = document.getElementById('finance-updated');
+        const financeAmountInput = document.getElementById('finance-amount');
+        const financePayBtn = document.getElementById('finance-pay');
 
         // Global variables for notifications
         let notifications = [];
@@ -1222,6 +1248,7 @@
         // ---------- Finance (Fee Balance) Logic ----------
         const FINANCE_CACHE_KEY = 'kpb_fee_cache_v1';
         const FINANCE_AUTH_KEY = 'kpb_fee_auth_v1';
+        const SEED_LOCK_KEY = 'kpb_seed_v1';
 
         function getCachedFinance() {
             try {
@@ -1264,6 +1291,8 @@
             const outstanding = Math.max(0, Number(data.totalFees || 0) - Number(data.amountPaid || 0));
             feeOutstanding.textContent = fmt(outstanding);
             financeUpdated.textContent = `Last updated: ${new Date(data.updatedAt || Date.now()).toLocaleString()}`;
+            if (data.programme) financeProgramme.textContent = `Programme: ${data.programme}`;
+            if (data.yearOfStudy) financeYear.textContent = `Year: ${data.yearOfStudy}`;
 
             // Finance notification (non-spam): only when outstanding decreased
             const prev = getCachedFinance();
@@ -1279,6 +1308,22 @@
             }
 
             setCachedFinance({ ...data, outstanding });
+        }
+
+        async function loadStudentProfile(studentId) {
+            try {
+                const ref = db.collection('students').doc(studentId);
+                const snap = await ref.get();
+                if (snap && snap.exists) {
+                    const s = snap.data();
+                    financeProgramme.textContent = `Programme: ${s.programme || '-'}`;
+                    financeYear.textContent = `Year: ${s.yearOfStudy || '-'}`;
+                    return s;
+                }
+            } catch (e) {}
+            financeProgramme.textContent = `Programme: -`;
+            financeYear.textContent = `Year: -`;
+            return null;
         }
 
         async function fetchFinanceFromApi(studentId, password) {
@@ -1300,6 +1345,8 @@
                     studentId: json.studentId || studentId,
                     totalFees: json.totalFees || 0,
                     amountPaid: json.amountPaid || 0,
+                    programme: json.programme,
+                    yearOfStudy: json.yearOfStudy,
                     updatedAt: Date.now()
                 };
             } catch (e) {
@@ -1319,6 +1366,8 @@
                         studentId,
                         totalFees: d.totalFees || 0,
                         amountPaid: d.amountPaid || 0,
+                        programme: d.programme,
+                        yearOfStudy: d.yearOfStudy,
                         updatedAt: d.updatedAt ? (d.updatedAt.toDate ? d.updatedAt.toDate().getTime() : new Date(d.updatedAt).getTime()) : Date.now()
                     };
                 }
@@ -1328,6 +1377,8 @@
                 studentId,
                 totalFees: 450.00,
                 amountPaid: 300.00,
+                programme: 'Computer Science (Demo)',
+                yearOfStudy: 2,
                 updatedAt: Date.now()
             };
         }
@@ -1364,6 +1415,114 @@
             } else {
                 authCard.style.display = 'block';
                 financeCard.style.display = 'none';
+            }
+        }
+
+        async function makePayment() {
+            const auth = getAuthState();
+            if (!auth) {
+                showToast('Please sign in first', 'error');
+                return;
+            }
+            const amt = Number((financeAmountInput.value || '0').trim());
+            if (!amt || amt <= 0) {
+                showToast('Enter a valid amount', 'error');
+                return;
+            }
+            try {
+                // Get latest
+                const current = await fetchFinanceFromFirestore(auth.studentId);
+                const newPaid = Math.min(Number(current.amountPaid || 0) + amt, Number(current.totalFees || 0));
+                const updated = {
+                    studentId: current.studentId,
+                    totalFees: Number(current.totalFees || 0),
+                    amountPaid: newPaid,
+                    programme: current.programme,
+                    yearOfStudy: current.yearOfStudy,
+                    updatedAt: Date.now()
+                };
+                let wrote = false;
+                try {
+                    await db.collection('feeBalances').doc(auth.studentId).set({
+                        totalFees: updated.totalFees,
+                        amountPaid: updated.amountPaid,
+                        programme: updated.programme,
+                        yearOfStudy: updated.yearOfStudy,
+                        updatedAt: new Date()
+                    }, { merge: true });
+                    await db.collection('feeBalances').doc(auth.studentId).collection('payments').add({
+                        amount: amt,
+                        at: new Date()
+                    });
+                    wrote = true;
+                } catch (e) {
+                    // offline/demo fallback only updates cache
+                }
+                renderFinance(updated);
+                showToast(`Payment successful: $${amt.toFixed(2)}`);
+                addNotification({
+                    title: 'Payment Successful',
+                    content: `You paid $${amt.toFixed(2)}. New outstanding shown in Finance.`,
+                    category: 'event',
+                    timestamp: new Date(),
+                    urgent: false,
+                    read: false
+                });
+                financeAmountInput.value = '';
+            } catch (e) {
+                showToast('Payment failed', 'error');
+            }
+        }
+
+        // ---------- Seed Demo Students ----------
+        const DEMO_STUDENTS = [
+            { studentId: 'KP2025-001', name: 'Tariro Moyo', programme: 'Computer Science', yearOfStudy: 2, totalFees: 600.00, amountPaid: 250.00, email: 'tariro.moyo@example.com' },
+            { studentId: 'KP2025-002', name: 'Blessing Ncube', programme: 'Electrical Engineering', yearOfStudy: 1, totalFees: 650.00, amountPaid: 400.00, email: 'blessing.nc@example.com' },
+            { studentId: 'KP2025-003', name: 'Nyasha Chirwa', programme: 'Mechanical Engineering', yearOfStudy: 3, totalFees: 700.00, amountPaid: 500.00, email: 'nyasha.chirwa@example.com' },
+            { studentId: 'KP2025-004', name: 'Admire Dube', programme: 'Civil Engineering', yearOfStudy: 2, totalFees: 620.00, amountPaid: 300.00, email: 'admire.dube@example.com' },
+            { studentId: 'KP2025-005', name: 'Rutendo Mhlanga', programme: 'Information Technology', yearOfStudy: 1, totalFees: 580.00, amountPaid: 180.00, email: 'rutendo.m@example.com' },
+            { studentId: 'KP2025-006', name: 'Talent Sibanda', programme: 'Accountancy', yearOfStudy: 2, totalFees: 550.00, amountPaid: 200.00, email: 'talent.sibanda@example.com' },
+            { studentId: 'KP2025-007', name: 'Kudakwashe Gora', programme: 'Business Management', yearOfStudy: 3, totalFees: 600.00, amountPaid: 450.00, email: 'kuda.gora@example.com' },
+            { studentId: 'KP2025-008', name: 'Chiedza Matiza', programme: 'Hospitality Management', yearOfStudy: 1, totalFees: 520.00, amountPaid: 120.00, email: 'chiedza.matiza@example.com' },
+            { studentId: 'KP2025-009', name: 'Farai Mpofu', programme: 'Architecture', yearOfStudy: 2, totalFees: 750.00, amountPaid: 350.00, email: 'farai.mpofu@example.com' },
+            { studentId: 'KP2025-010', name: 'Ruvimbo Zhou', programme: 'Graphic Design', yearOfStudy: 2, totalFees: 500.00, amountPaid: 220.00, email: 'ruvimbo.zhou@example.com' }
+        ];
+
+        async function seedDemoStudents() {
+            try {
+                const seededLocal = localStorage.getItem(SEED_LOCK_KEY);
+                if (seededLocal) return false;
+                // If students >= 10, assume already seeded
+                let needSeed = true;
+                try {
+                    const qs = await db.collection('students').limit(10).get();
+                    if (!qs.empty && qs.size >= 10) needSeed = false;
+                } catch (e) {}
+                if (!needSeed) {
+                    localStorage.setItem(SEED_LOCK_KEY, '1');
+                    return false;
+                }
+                for (const s of DEMO_STUDENTS) {
+                    await db.collection('students').doc(s.studentId).set({
+                        name: s.name,
+                        programme: s.programme,
+                        yearOfStudy: s.yearOfStudy,
+                        email: s.email,
+                        createdAt: new Date()
+                    }, { merge: true });
+                    await db.collection('feeBalances').doc(s.studentId).set({
+                        totalFees: s.totalFees,
+                        amountPaid: s.amountPaid,
+                        programme: s.programme,
+                        yearOfStudy: s.yearOfStudy,
+                        updatedAt: new Date()
+                    }, { merge: true });
+                }
+                localStorage.setItem(SEED_LOCK_KEY, '1');
+                return true;
+            } catch (e) {
+                // If seeding fails (offline), skip silently
+                return false;
             }
         }
 
@@ -1633,6 +1792,12 @@
                 } else {
                     showToast('No offline copy available', 'error');
                 }
+            });
+            if (financePayBtn) financePayBtn.addEventListener('click', makePayment);
+
+            // Seed demo students once
+            seedDemoStudents().then((did) => {
+                if (did) showToast('Seeded 10 demo students');
             });
         });
     </script>
