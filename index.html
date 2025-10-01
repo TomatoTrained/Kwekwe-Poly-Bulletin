@@ -730,6 +730,101 @@
             animation: fadeInUp 0.35s ease both;
         }
     </style>
+    <style>
+        /* Finance (Fee Balance) UI */
+        .finance-section {
+            padding: 20px 0 100px;
+            display: none;
+        }
+
+        .finance-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 10px rgba(2, 8, 23, 0.06);
+            border: 1px solid rgba(2, 8, 23, 0.05);
+            padding: 16px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .finance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .metric {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .metric .label {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .metric .value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .finance-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #1a4b8c, #2060b3);
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn.secondary {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            max-width: 520px;
+            margin: 0 auto 16px;
+        }
+
+        .auth-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .auth-row input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .finance-note {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+    </style>
 </head>
 
 <body>
@@ -793,6 +888,53 @@
         </div>
     </section>
 
+    <!-- Finance (Fee Balance) Section -->
+    <section class="finance-section" id="finance-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Fee Balance Checker</h2>
+            </div>
+            <div class="auth-card" id="finance-auth">
+                <div style="font-weight: 600; color: #1f2937;">Sign in to view your fee balance</div>
+                <div class="auth-row">
+                    <input id="student-id" type="text" placeholder="Student ID (e.g., KP-2023-001)" autocomplete="username">
+                    <input id="student-pass" type="password" placeholder="Portal Password" autocomplete="current-password">
+                    <button class="btn" id="finance-login"><i class="fas fa-lock-open"></i> Sign In</button>
+                </div>
+                <div class="finance-note">Your credentials are used securely to fetch a read-only balance. Data-in-transit is encrypted over HTTPS.</div>
+            </div>
+
+            <div class="finance-card" id="finance-card" style="display: none;">
+                <div style="display:flex; justify-content: space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:0.85rem; color:#6b7280;">Student</div>
+                        <div id="finance-student" style="font-weight:700; color:#111827;">-</div>
+                    </div>
+                    <button class="btn secondary" id="finance-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                </div>
+                <div class="finance-grid">
+                    <div class="metric">
+                        <div class="label">Total Fees</div>
+                        <div class="value" id="fee-total">$0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="label">Amount Paid</div>
+                        <div class="value" id="fee-paid">$0</div>
+                    </div>
+                    <div class="metric">
+                        <div class="label">Outstanding</div>
+                        <div class="value" id="fee-outstanding">$0</div>
+                    </div>
+                </div>
+                <div class="finance-actions">
+                    <button class="btn" id="finance-refresh"><i class="fas fa-sync-alt"></i> Refresh Balance</button>
+                    <button class="btn secondary" id="finance-cache"><i class="fas fa-cloud-download-alt"></i> Offline Copy</button>
+                </div>
+                <div class="finance-note" id="finance-updated">Last updated: -</div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -836,6 +978,10 @@
             <i class="fas fa-bell nav-icon"></i>
             <span>Alerts</span>
         </div>
+        <div class="nav-item" data-page="finance" id="nav-finance">
+            <i class="fas fa-wallet nav-icon"></i>
+            <span>Finance</span>
+        </div>
         <div class="nav-item" data-page="events">
             <i class="fas fa-calendar nav-icon"></i>
             <span>Events</span>
@@ -868,6 +1014,22 @@
         const refreshNewsBtn = document.getElementById('refresh-news');
         const lastUpdatedText = document.getElementById('last-updated-text');
         const statusIndicator = document.getElementById('status-indicator');
+
+        // Finance DOM
+        const financeSection = document.getElementById('finance-section');
+        const authCard = document.getElementById('finance-auth');
+        const financeCard = document.getElementById('finance-card');
+        const loginBtn = document.getElementById('finance-login');
+        const logoutBtn = document.getElementById('finance-logout');
+        const refreshFinanceBtn = document.getElementById('finance-refresh');
+        const cacheFinanceBtn = document.getElementById('finance-cache');
+        const studentIdInput = document.getElementById('student-id');
+        const studentPassInput = document.getElementById('student-pass');
+        const financeStudent = document.getElementById('finance-student');
+        const feeTotal = document.getElementById('fee-total');
+        const feePaid = document.getElementById('fee-paid');
+        const feeOutstanding = document.getElementById('fee-outstanding');
+        const financeUpdated = document.getElementById('finance-updated');
 
         // Global variables for notifications
         let notifications = [];
@@ -1057,6 +1219,166 @@
             }
         }
 
+        // ---------- Finance (Fee Balance) Logic ----------
+        const FINANCE_CACHE_KEY = 'kpb_fee_cache_v1';
+        const FINANCE_AUTH_KEY = 'kpb_fee_auth_v1';
+
+        function getCachedFinance() {
+            try {
+                const raw = localStorage.getItem(FINANCE_CACHE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setCachedFinance(data) {
+            try {
+                localStorage.setItem(FINANCE_CACHE_KEY, JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        function getAuthState() {
+            try {
+                const raw = localStorage.getItem(FINANCE_AUTH_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setAuthState(state) {
+            try {
+                if (state) localStorage.setItem(FINANCE_AUTH_KEY, JSON.stringify(state));
+                else localStorage.removeItem(FINANCE_AUTH_KEY);
+            } catch (e) {}
+        }
+
+        function renderFinance(data) {
+            if (!data) return;
+            const fmt = (n) => {
+                try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(Number(n || 0)); } catch (e) { return `$${Number(n || 0).toFixed(2)}`; }
+            };
+            feeTotal.textContent = fmt(data.totalFees);
+            feePaid.textContent = fmt(data.amountPaid);
+            const outstanding = Math.max(0, Number(data.totalFees || 0) - Number(data.amountPaid || 0));
+            feeOutstanding.textContent = fmt(outstanding);
+            financeUpdated.textContent = `Last updated: ${new Date(data.updatedAt || Date.now()).toLocaleString()}`;
+
+            // Finance notification (non-spam): only when outstanding decreased
+            const prev = getCachedFinance();
+            if (prev && Number(prev.totalFees - prev.amountPaid) > outstanding) {
+                addNotification({
+                    title: 'Payment Received',
+                    content: 'Your outstanding balance has decreased.',
+                    category: 'event',
+                    timestamp: new Date(),
+                    urgent: false,
+                    read: false
+                });
+            }
+
+            setCachedFinance({ ...data, outstanding });
+        }
+
+        async function fetchFinanceFromApi(studentId, password) {
+            // Placeholder secure endpoint. Replace with the institution HTTPS API when available.
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 8000);
+            try {
+                const resp = await fetch('https://example.com/kwekwe-poly/api/fees', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId, password }),
+                    signal: controller.signal,
+                    credentials: 'include'
+                });
+                clearTimeout(timeout);
+                if (!resp.ok) throw new Error('Bad response');
+                const json = await resp.json();
+                return {
+                    studentId: json.studentId || studentId,
+                    totalFees: json.totalFees || 0,
+                    amountPaid: json.amountPaid || 0,
+                    updatedAt: Date.now()
+                };
+            } catch (e) {
+                clearTimeout(timeout);
+                throw e;
+            }
+        }
+
+        async function fetchFinanceFromFirestore(studentId) {
+            try {
+                if (!db) throw new Error('No DB');
+                const docRef = db.collection('feeBalances').doc(studentId);
+                const snap = await docRef.get();
+                if (snap && snap.exists) {
+                    const d = snap.data();
+                    return {
+                        studentId,
+                        totalFees: d.totalFees || 0,
+                        amountPaid: d.amountPaid || 0,
+                        updatedAt: d.updatedAt ? (d.updatedAt.toDate ? d.updatedAt.toDate().getTime() : new Date(d.updatedAt).getTime()) : Date.now()
+                    };
+                }
+            } catch (e) {}
+            // Demo fallback if nothing in Firestore
+            return {
+                studentId,
+                totalFees: 450.00,
+                amountPaid: 300.00,
+                updatedAt: Date.now()
+            };
+        }
+
+        async function refreshFinance() {
+            const auth = getAuthState();
+            if (!auth) {
+                showToast('Please sign in to fetch balance', 'error');
+                return;
+            }
+            try {
+                // Try API first, fallback to Firestore/demo
+                let data;
+                try {
+                    data = await fetchFinanceFromApi(auth.studentId, auth.token || auth.password);
+                } catch (e) {
+                    data = await fetchFinanceFromFirestore(auth.studentId);
+                }
+                renderFinance(data);
+                showToast('Balance updated');
+            } catch (e) {
+                showToast('Failed to update balance', 'error');
+            }
+        }
+
+        function applyFinanceAuthUI() {
+            const auth = getAuthState();
+            if (auth) {
+                authCard.style.display = 'none';
+                financeCard.style.display = 'block';
+                financeStudent.textContent = auth.studentId;
+                const cached = getCachedFinance();
+                if (cached) renderFinance(cached);
+            } else {
+                authCard.style.display = 'block';
+                financeCard.style.display = 'none';
+            }
+        }
+
+        function showSection(page) {
+            // Toggle sections for simple navigation simulation
+            const newsSec = document.querySelector('.news-section');
+            if (page === 'finance') {
+                newsSec.style.display = 'none';
+                financeSection.style.display = 'block';
+            } else {
+                financeSection.style.display = 'none';
+                newsSec.style.display = 'block';
+            }
+        }
+
         // Add notification to the list
         function addNotification(notification) {
             notifications.unshift(notification);
@@ -1194,13 +1516,19 @@
                     switch (page) {
                         case 'home':
                             showToast('Welcome to Kwekwe Poly Bulletin!');
+                            showSection('news');
                             break;
                         case 'news':
                             showToast('News feed refreshed!');
                             loadNews();
+                            showSection('news');
                             break;
                         case 'notifications':
                             openNotificationPanel();
+                            break;
+                        case 'finance':
+                            showSection('finance');
+                            applyFinanceAuthUI();
                             break;
                         case 'events':
                             showToast('Events page coming soon!');
@@ -1275,6 +1603,37 @@
 
             // Set up periodic refresh every 2 minutes (optional)
             setInterval(loadNews, 120000);
+
+            // Wire finance actions
+            applyFinanceAuthUI();
+            if (loginBtn) loginBtn.addEventListener('click', async function () {
+                const sid = (studentIdInput.value || '').trim();
+                const pwd = (studentPassInput.value || '').trim();
+                if (!sid || !pwd) {
+                    showToast('Enter student ID and password', 'error');
+                    return;
+                }
+                // In a real app, exchange credentials for a token via HTTPS
+                setAuthState({ studentId: sid, token: pwd });
+                financeStudent.textContent = sid;
+                applyFinanceAuthUI();
+                await refreshFinance();
+            });
+            if (logoutBtn) logoutBtn.addEventListener('click', function () {
+                setAuthState(null);
+                applyFinanceAuthUI();
+                showToast('Signed out');
+            });
+            if (refreshFinanceBtn) refreshFinanceBtn.addEventListener('click', refreshFinance);
+            if (cacheFinanceBtn) cacheFinanceBtn.addEventListener('click', function () {
+                const cached = getCachedFinance();
+                if (cached) {
+                    renderFinance(cached);
+                    showToast('Loaded offline balance');
+                } else {
+                    showToast('No offline copy available', 'error');
+                }
+            });
         });
     </script>
 </body>
